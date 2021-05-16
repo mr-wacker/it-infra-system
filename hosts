@@ -1,0 +1,62 @@
+node1 ansible_host=193.40.156.86 ansible_port=11222 ansible_ssh_user=ubuntu ansible_python_interpreter=python3 ansible_ssh_private_key_file=~/.ssh/ica0002
+node2 ansible_host=193.40.156.86 ansible_port=8922 ansible_ssh_user=ubuntu ansible_python_interpreter=python3 ansible_ssh_private_key_file=~/.ssh/ica0002
+node3 ansible_host=193.40.156.86 ansible_port=10722 ansible_ssh_user=ubuntu ansible_python_interpreter=python3 ansible_ssh_private_key_file=~/.ssh/ica0002
+
+[app_servers]
+node1
+node2
+node3
+
+[dns_masters]
+node3
+
+[dns_slaves]
+node1
+node2
+
+[dns_servers:children]
+dns_masters
+dns_slaves
+
+[prometheus]
+node3
+node1
+node2
+
+[db_servers]
+node1 mysql_server_id=80
+node2 mysql_server_id=24
+
+[web_servers]
+node1
+node2
+
+[node_exporters]
+node1
+node2
+node3
+
+[grafana]
+node3
+
+[influxdb]
+node3
+
+[pinger]
+node3
+
+[docker_servers]
+node1
+node3
+node2
+
+[haproxy]
+node1
+node2
+
+[application_vms]
+node1
+node2
+
+[internal_vm]
+node3

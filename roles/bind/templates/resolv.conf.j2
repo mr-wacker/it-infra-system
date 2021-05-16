@@ -1,0 +1,12 @@
+{% for vm in groups['dns_slaves'] %}
+nameserver {{ hostvars[vm]['ansible_default_ipv4']['address'] }}
+{% endfor %}
+# Search Domains
+{% for search_domain in resolv_conf_search_domains %}
+{% if search_domain %}
+search {{ search_domain }}
+{% endif %}
+{% endfor %}
+{% for i  in dns_forwarders %}
+nameserver {{ i }}
+{% endfor %}

@@ -1,0 +1,19 @@
+---
+
+#Check if rsyslog is installed
+- name: Install Rsyslog
+  apt:
+    name: rsyslog
+    state: latest
+
+- name: Reconfigure Rsyslog
+  template:
+    src: 51-telegraf.conf.j2
+    dest: /etc/rsyslog.d/51-telegraf.conf
+  notify: Restart Rsyslog
+
+- name: start rsyslog
+  service:
+    name: rsyslog
+    state: started
+    enabled: yes

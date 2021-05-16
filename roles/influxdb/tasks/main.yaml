@@ -1,0 +1,35 @@
+---
+
+- name: Install InfluxDB and InfluxDB client
+  apt:
+    name: 
+      - influxdb
+      - influxdb-client
+    state: latest
+
+- name: Download Telegraf package
+  get_url:
+    url: https://dl.influxdata.com/telegraf/releases/telegraf_1.16.0-1_amd64.deb
+    dest: /opt/telegraf_1.16.0-1_amd64.deb
+
+- name: Install Telegraf
+  apt:
+    deb: /opt/telegraf_1.16.0-1_amd64.deb
+
+- name: Reconfigure Telegraf
+  template:
+    src: telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.conf
+  notify: restart telegraf
+
+- name: Start service influxdb, if not started
+  service:
+    name: influxdb
+    state: started
+    enabled: yes
+
+- name: Start service telegraf, if not started
+  service:
+    name: telegraf
+    state: started
+    enabled: yes

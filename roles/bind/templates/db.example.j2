@@ -1,0 +1,19 @@
+$TTL	604800
+{{ fqdn }}.	IN	SOA	{{ fqdn }}. admin.{{ fqdn }}. (
+			      3		; Serial
+			 604800		; Refresh
+			  86400		; Retry
+			2419200		; Expire
+			 604800 )	; Negative Cache TTL
+;
+{% for vm in groups['dns_servers'] %}
+{{ fqdn }}.  IN NS {{ vm }}.{{fqdn}}.
+{% endfor %}
+{% for vm in hostvars %}
+{{ hostvars[vm]['inventory_hostname'] }}.{{fqdn}}. IN A {{ hostvars[vm]['ansible_default_ipv4']['address'] }}
+{% endfor %}
+{% if dns_record is defined %}
+{% for item in dns_record %}
+{{ item.name }}			IN      {{ item.type }}		{{ item.ipaddress }}
+{% endfor %}
+{% endif %}

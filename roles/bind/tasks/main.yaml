@@ -1,0 +1,90 @@
+---
+
+- name: Install bind
+  apt:
+    name: 
+      - bind9
+      - python3-dnspython 
+    update_cache: no
+
+- name: Start service bind9, if not started
+  service:
+    name: bind9
+    state: started
+    enabled: yes
+
+- name: copy the options config file
+  template:
+    src: ../templates/named.conf.options.j2
+    dest: /etc/bind/named.conf.options
+  notify: restart bind9
+
+- name: Bind zone config
+  template:
+    src: ../templates/named.conf.local.master.j2
+    dest: /etc/bind/named.conf.local  
+  notify: restart bind9   
+  when: inventory_hostname in groups['dns_masters']
+
+- name: Bind slave zone config
+  template:
+    src: ../templates/named.conf.local.slave.j2
+    dest: /etc/bind/named.conf.local   
+  notify: restart bind9  
+  when: inventory_hostname in groups['dns_slaves']
+
+- name: DNS Zone
+  template:
+    src: ../templates/db.example.j2
+    dest: /var/lib/bind/db.{{fqdn}}
+  notify: restart bind9
+  when: inventory_hostname in groups['dns_masters']
+
+- name: copy the resolv file
+  template:
+    src: ../templates/resolv.conf.j2
+    dest: /etc/resolv.conf
+  notify: restart bind9
+
+- name: execute handlers 
+  meta: flush_handlers
+
+- name: Add an A record
+  nsupdate:
+    key_algorithm: "hmac-sha256"
+    key_name: "dns_update"
+    key_secret: "{{ns_update_secret}}"
+    server: "{{ hostvars[groups['dns_masters'][0]]['ansible_default_ipv4']['address'] }}"
+    zone: "{{ fqdn }}."
+    record: "{{ item['subdomain'] }}.{{ fqdn }}."
+    value: "{{ item['ip'] }}"
+    type: "A"
+  loop: "{{ a_records }}"
+  when: inventory_hostname == groups['dns_masters'][0]
+  notify: restart bind9 reload rndc
+
+- name: Add CNAME record
+  nsupdate:
+    key_algorithm: "hmac-sha256"
+    key_name: "dns_update"
+    key_secret: "{{ ns_update_secret }}"
+    server: "{{ hostvars[groups['dns_masters'][0]]['ansible_default_ipv4']['address'] }}"
+    zone: "{{ fqdn }}."
+    record: "{{ item['cname'] }}.{{ fqdn }}."
+    value: "{{ item['real'] }}.{{ fqdn }}."
+    type: "CNAME"
+  loop: "{{ dns_cnames }}"
+  when: inventory_hostname == groups['dns_masters'][0]
+
+- name: Add CNAME record
+  nsupdate:
+    key_algorithm: "hmac-sha256"
+    key_name: "dns_update"
+    key_secret: "{{ ns_update_secret }}"
+    server: "{{ hostvars[groups['dns_masters'][0]]['ansible_default_ipv4']['address'] }}"
+    zone: "{{ fqdn }}."
+    record: "{{ item['cname'] }}.{{ fqdn }}."
+    value: "{{ item['real'] }}.{{ fqdn }}."
+    type: "CNAME"
+  loop: "{{ dns_cnames }}"
+  when: inventory_hostname == groups['dns_masters'][0]

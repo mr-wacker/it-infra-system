@@ -1,0 +1,51 @@
+---
+- name: Install Haproxy
+  apt: 
+    name: haproxy
+    state: latest
+
+- name: HAProxy config
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+  notify: 
+    - restart haproxy
+
+- name: Install docker package
+  apt:
+    name: 
+      - docker.io
+      - python3-docker
+
+- name: Docker service
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: HAProxy exporter container for node1
+  docker_container:
+    name: haproxy_exporter
+    image: quay.io/prometheus/haproxy-exporter:v0.9.0
+    published_ports:
+      - "{{ docker_haproxy_exporter_port }}:{{ docker_haproxy_exporter_port }}" 
+    command: --haproxy.scrape-uri="{{ haproxy_scrape_uri.node1 }}"
+    restart_policy: always
+  when: inventory_hostname == "node1"
+
+- name: HAProxy exporter container for node2
+  docker_container:
+    name: haproxy_exporter
+    image: quay.io/prometheus/haproxy-exporter:v0.9.0
+    published_ports:
+      - "{{ docker_haproxy_exporter_port }}:{{ docker_haproxy_exporter_port }}" 
+    command: --haproxy.scrape-uri="{{ haproxy_scrape_uri.node2 }}"
+    restart_policy: always
+  when: inventory_hostname == "node2"
+
+- name: Start service HAProxy, if not started
+  service:
+    name: haproxy
+    state: started
+    enabled: yes
+  become: yes

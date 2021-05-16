@@ -1,0 +1,11 @@
+---
+
+- name: Reload systemd
+  shell: "systemctl daemon-reload"
+  when : ansible_facts.services['nginx-prometheus-exporter.service'] is not defined
+
+- name: Restart Nginx exporter
+  service:
+    name: nginx-prometheus-exporter
+    state: restarted
+    enabled: yes

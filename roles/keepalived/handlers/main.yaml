@@ -1,0 +1,15 @@
+---
+- name: restart keepalived
+  service:
+    name: keepalived
+    state: restarted
+    enabled: yes
+
+- name: Systemctl daemon-reload
+  shell: "systemctl daemon-reload"
+
+- name: restart keepalived-exporter
+  service:
+    name: keepalived-exporter
+    state: restarted
+    enabled: yes

@@ -1,0 +1,51 @@
+- name: Install mysql server
+  apt:
+    name: mysql-server
+    update_cache: yes
+
+- name: Install Pymsql
+  apt:
+    pkg: 
+    - python3-pymysql
+  
+- name: copy the mysql config file and restart mysql server
+  template:
+    src: override.cnf.j2
+    dest: /etc/mysql/mysql.conf.d/override.cnf
+    mode: 0644
+  notify: restart mysql
+  become: yes
+
+- name: MySQL database 
+  mysql_db:
+    name: "{{ mysql_database }}"
+    login_unix_socket: /var/run/mysqld/mysqld.sock 
+  no_log: True 
+
+- name: Create database user with limited privileges
+  mysql_user:
+    name: "{{ mysql_user }}"
+    host: "%"
+    password: "{{ mysql_password }}"
+    priv: '{{ mysql_database }}.*:ALL'
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  no_log: true
+
+- name: Create MySQL replication user
+  mysql_user:
+    name: "{{ mysql_replication_user }}"
+    password: "{{ mysql_replication_pass }}"
+    priv: "*.*:REPLICATION SLAVE"
+    host: "%"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  no_log: true
+
+- name: Execute handlers preemptively
+  meta: flush_handlers
+
+- name: start mysql server
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes

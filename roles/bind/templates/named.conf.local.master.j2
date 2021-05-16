@@ -1,0 +1,6 @@
+zone "{{ fqdn }}" {
+  type master;
+  file "/var/lib/bind/db.{{ fqdn }}";
+  allow-transfer { internal; key dns_transfer; };
+  allow-update { key dns_update; };
+};

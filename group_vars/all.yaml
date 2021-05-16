@@ -1,0 +1,138 @@
+#* , /etc/bind/*
+domain: wacker
+fqdn: wacker.ee
+
+#node can be changed to arbitrary values
+node1: node1.{{ fqdn }}
+node2: node2.{{ fqdn }}
+node3: node3.{{ fqdn }}
+
+#/etc/mysql/*.conf
+# mysql_host: "{{ hostvars['node2']['ansible_default_ipv4']['address'] }}"
+
+mysql_host: db.wacker.ee
+mysql_database: agama
+mysql_user: agama
+
+#/etc/mysql-exporter/*.conf
+mysql_exporter_user: mysql_exporter
+mysql_backup_user: backup
+mysql_replication_user: replication
+
+# *
+vm1_ip:  hostvars['node1']['ansible_default_ipv4']['address'] 
+vm2_ip:  hostvars['node2']['ansible_default_ipv4']['address'] 
+vm3_ip:  hostvars['node3']['ansible_default_ipv4']['address'] 
+
+# *
+vm1_port_number : "{{ hostvars['node1']['ansible_port'] //100 }}80"
+vm2_port_number : "{{ hostvars['node2']['ansible_port'] //100 }}80"
+vm3_port_number : "{{ hostvars['node3']['ansible_port'] //100 }}80"
+
+#/etc/bind/named.conf.options
+local_network: 192.168.42.0/24
+static_route_network: 192.168.100.0/24 
+localhost: 127.0.0.0/8
+localhost_address: 127.0.0.1
+
+#/etc/bind/zones
+dns_forwarders:
+  - 8.8.8.8
+  - 1.1.1.1
+  - 9.9.9.9
+  - 9.9.9.10
+
+#etc/bind/*
+dns_record:
+ - name: node1
+   type: A
+   ipaddress: "{{ hostvars['node1']['ansible_default_ipv4']['address'] }}"
+ - name: node2
+   type: A
+   ipaddress: "{{ hostvars['node2']['ansible_default_ipv4']['address'] }}"
+ - name: node3
+   type: A
+   ipaddress: "{{ hostvars['node3']['ansible_default_ipv4']['address'] }}"
+ - name: backup
+   type: A
+   ipaddress: 192.168.42.156
+
+#/etc/bind/named.conf
+reverse_domain: 
+  - 151.42.168.192.in-addr.arpa
+
+acl: ica0002acl
+
+ica0002acl:
+  - 127.0.0.1
+  - 192.168.42.0/24
+
+#final version of dns record 
+dns_cnames:
+  - cname: ns
+    real: "{{ groups['dns_servers'][0] }}"
+  - cname: influxdb
+    real: "{{ groups['influxdb'][0] }}"
+  - cname: www
+    real: "{{ groups['web_servers'][0] }}" 
+  - cname: db
+    real: "{{ groups['db_servers'][1] }}" 
+  - cname: grafana
+    real: "{{ groups['grafana'][0] }}"
+  - cname: prometheus
+    real: "{{ groups['prometheus'][0] }}"
+  - cname: haproxy1
+    real: "{{ groups['haproxy'][0] }}"
+  - cname: haproxy2
+    real: "{{ groups['haproxy'][1] }}"
+  - cname: abc3
+    real: "{{ groups['dns_servers'][0] }}"
+  - cname: "exam"
+    real: "{{ groups['dns_slaves'][1] }}"
+
+
+a_records:
+  - subdomain: backup
+    ip: 192.168.42.156
+
+#reverse domain ( not needed but for learning )
+resolv_conf_search_domains:
+  - wacker.ee
+
+#/etc/prometheus/*
+prometheus_exporters:
+  node:
+    port: 9100
+  nginx:
+    port: 9113
+  mysql:
+    port: 9104
+  bind:
+    port: 9119
+
+#etc/system/systemd/prometheus-service
+prometheus_web_external_url: http://{{node3}}/prometheus
+
+#/etc/nginx/sites-enabled/default 
+default_nginx_port: 80
+pinger_port: 8086
+haproxy_port: 88
+docker_haproxy_exporter_port: 9101
+keepalived_exporter_port: 9165
+grafana_port: 3000
+docker_grafana_port: 3001
+docker_agama_port: 8000
+statistics_port: 8053
+stub_status_port: 8080
+
+#numbers of nginx node
+nginx_containers: 1
+
+#keepalived virtual address
+virtual_ipaddress : 192.168.100.{{hostvars['node1']['ansible_default_ipv4']['address'].split('.')[3]}}  
+
+#haproxy scrape uri
+# 
+haproxy_scrape_uri:
+  node1: http://node1.{{ fqdn }}:{{ haproxy_port }}/haproxy?stats;csv
+  node2: http://node2.{{ fqdn }}:{{ haproxy_port }}/haproxy?stats;csv

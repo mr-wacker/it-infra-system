@@ -1,0 +1,16 @@
+# According to backup SLA: backups should be done automatically every day at 01:10 (1 AM) for grafana and prometheus, according to EET (UTC +2) and EEST (UTC +3) time zones
+
+10 1 * * * backup rsync -a /var/lib/grafana /home/backup/backup
+
+# Upload all the backups every week at 01:10 (1 AM) on Sundays, according to EET (UTC +2) and EEST (UTC +3) time zones
+
+10 1 * * 0 backup duplicity --no-encryption full /home/backup/backup/ rsync://mr-wacker@backup.{{ fqdn }}//home/mr-wacker/
+
+# Perform all the incremental backups every day at 00:10, according to EET (UTC +2) and EEST (UTC +3) time zones
+
+10 0 * * 1-6 backup duplicity --no-encryption incremental /home/backup/backup/ rsync://mr-wacker@backup.{{ fqdn }}//home/mr-wacker/
+
+# Delete old backups at 02:10 on 28th day of every month, according to EET (UTC +2) and EEST (UTC +3) time zones
+10 2 28 * * backup duplicity remove-older-than 1M rsync://mr-wacker@backup.{{ fqdn }}//home/mr-wacker/
+
+# duplicity --no-encryption restore rsync://mr-wacker@backup.{{ fqdn }}//home/mr-wacker/ /home/backup/restore/

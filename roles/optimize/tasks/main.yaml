@@ -1,0 +1,70 @@
+---
+
+- name: Make sudo-san colourful 
+  lineinfile:
+    path: /root/.bashrc
+    line : "force_color_prompt=yes"
+    create: no
+
+- name: source bashrc
+  shell: source /root/.bashrc 
+  args:
+     executable: /bin/bash
+
+# THIS SCRIPT WILL Replace System Port with Dockers Service Completly
+
+- name: Install python3-docker for docker_container_info module
+  apt:
+    name: python3-docker
+
+- name: Get infos on container
+  docker_container_info:
+    name: agama
+  register: agama_docker
+
+- name: Get infos on container
+  docker_container_info:
+    name: grafana
+  register: grafana_docker
+
+# - name: Check if agama containers are running
+#   debug: 
+#     msg: "agama : {{ agama_docker.container['State'] }}"
+
+# AGAMA SECTION ---
+- name: If Docker agama is not running, try to restart them
+  docker_container:
+    name: agama
+    state: started
+  when : agama_docker.container['State']['Status'] == "exited"
+  notify: docker_container agama
+
+- name: to recollect the container information
+  meta: flush_handlers
+
+- name: If agama containers are running, stop "uwsgi" service on local host
+  service:
+    name: uwsgi
+    state: stopped
+    enabled: yes
+  when : agama_docker.container['State']['Status'] == "running" 
+# --- AGAMA SECTION
+
+# GRAFANA SECTION ---
+- name: If Docker grafana is not running, try to restart them
+  docker_container:
+    name: grafana
+    state: started
+  when : grafana_docker.container['State']['Status'] == "exited"
+  notify: docker_container grafana
+
+- name: to recollect the container information
+  meta: flush_handlers
+
+- name: If grafana containers are running, stop "grafana-server" service on local host
+  service:
+    name: grafana-server
+    state: stopped
+    enabled: yes
+  when : grafana_docker.container['State']['Status'] == "running" 
+# --- GRAFANA SECTION

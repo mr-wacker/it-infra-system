@@ -1,0 +1,23 @@
+- name: Add the user 'roman' with a specific uid and a primary group of 'admin'
+  user:
+    name: roman
+    comment: Roman Kuchin
+    uid: 1040
+    group: admin
+
+- name: Add the user 'juri' with a specific uid and a primary group of 'admin'
+  user:
+    name: juri
+    comment: Juri Hudolejev
+    uid: 1041
+    group: admin
+
+- name: Set authorized keys for roman taken from url
+  authorized_key:
+    user: roman
+    key: https://github.com/romankuchin.keys
+
+- name: Set authorized keys for juri taken from url
+  authorized_key:
+    user: juri
+    key: https://github.com/hudolejev.keys

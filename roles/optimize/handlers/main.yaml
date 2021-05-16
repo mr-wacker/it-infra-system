@@ -1,0 +1,11 @@
+---
+
+- name: docker_container agama
+  docker_container_info:
+    name: agama
+  register: agama_docker
+
+- name: docker_container grafana 
+  docker_container_info:
+    name: grafana
+  register: grafana_docker

@@ -1,0 +1,32 @@
+key "dns_transfer" {
+	algorithm hmac-sha256;
+	secret "{{ns_transfer_secret}}";
+};
+
+key "dns_update" {
+	algorithm hmac-sha256;
+	secret "{{ns_update_secret}}";
+};
+
+
+acl internal {
+	{% for vm in groups['dns_slaves'] %}
+{{ hostvars[vm]['ansible_default_ipv4']['address'] }};
+	{% endfor %}
+};
+
+options {
+	directory "/var/cache/bind";
+	forwarders {
+      {% for f in dns_forwarders %}
+	    {{ f }};
+      {% endfor %}
+	};
+    allow-query { {{ localhost_address }}; {{ local_network }}; 172.17.0.0/16; };
+	dnssec-validation no;
+	auth-nxdomain no;    # conform to RFC1035
+};
+
+statistics-channels {
+  inet {{ localhost_address }} port {{ statistics_port }} allow { {{ localhost_address }}; };
+};

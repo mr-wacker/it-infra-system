@@ -1,0 +1,41 @@
+---
+- name: keepalived package
+  apt: 
+    name: keepalived
+    state: latest
+
+- name: Configure keepalived
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+  notify:
+    - restart keepalived
+
+- name: Download and unarchive keepalived exporter
+  unarchive:
+    src: https://github.com/cafebazaar/keepalived-exporter/releases/download/v1.1.0/keepalived-exporter-1.1.0.linux-amd64.tar.gz
+    dest: /usr/local/bin
+    remote_src: yes
+
+- name: Create keepalived-exporter service
+  template:
+    src: keepalived-exporter.service.j2
+    dest: /etc/systemd/system/keepalived-exporter.service
+  notify: 
+    - Systemctl daemon-reload
+    - restart keepalived-exporter
+
+- name: Start service keepalived, if not started
+  service:
+    name: keepalived
+    state: started
+    enabled: yes
+  become: yes
+
+
+- name: Start service keepalived-exporter, if not started
+  service:
+    name: keepalived-exporter
+    state: started
+    enabled: yes
+  become: yes

@@ -1,0 +1,31 @@
+---
+
+- name: Download and unarchive Nginx exporter
+  unarchive:
+    src: https://github.com/nginxinc/nginx-prometheus-exporter/releases/download/v0.8.0/nginx-prometheus-exporter-0.8.0-linux-amd64.tar.gz
+    dest: /usr/local/bin
+    remote_src: yes
+
+- name: Create Nginx exporter service
+  template:
+    src: nginx-prometheus-exporter.service.j2
+    dest: /etc/systemd/system/nginx-prometheus-exporter.service
+  notify: 
+    - Reload systemd
+    - Restart Nginx exporter
+
+- name: Enable exporter service
+  service:
+    name: nginx-prometheus-exporter
+    state: started
+    enabled: yes
+  become: yes
+
+# Without handlers
+# - name: restart service nginx exporter in all cases, also issue daemon-reload to pick up config changes
+#   systemd:
+#     state: restarted
+#     daemon_reload: yes
+#     name: nginx-prometheus-exporter
+#     enabled: yes
+#   become: yes

@@ -1,0 +1,35 @@
+---
+
+- name: Install MySQL exporter and python3-pymysql
+  apt:
+    name: 
+      - prometheus-mysqld-exporter
+      - python3-pymysql
+
+- name: Configure MySQL exporter
+  template:
+    src: my.cnf.j2
+    dest: /var/lib/prometheus/.my.cnf 
+    owner: prometheus
+    group: prometheus
+    mode: '0600'
+ 
+- name: Create MySQL exporter user
+  mysql_user:
+    name: "{{ mysql_exporter_user }}"
+    password: "{{ mysql_exporter_pass }}"
+    priv: "*.*:PROCESS,REPLICATION CLIENT,SELECT"
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+  no_log: true
+  notify : Reload systemd
+
+# # Need a hot fix ->>> 
+
+- meta : flush_handlers
+
+- name: Enabled
+  service:
+    name: prometheus-mysqld-exporter
+    state: started
+    enabled: yes
+  become: yes

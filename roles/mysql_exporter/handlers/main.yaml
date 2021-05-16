@@ -1,0 +1,12 @@
+---
+
+- name: Reload systemd
+  shell: "systemctl daemon-reload"
+  when : ansible_facts.services['prometheus-mysqld-exporter.service'] is not defined
+
+- name: Restart MySQL exporter
+  service:
+    name: prometheus-mysqld-exporter
+    state: restarted
+    enabled: yes
+

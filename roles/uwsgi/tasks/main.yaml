@@ -1,0 +1,18 @@
+- name: Install uwsgi packages
+  apt:
+    pkg:
+    - uwsgi
+    - uwsgi-plugin-python3
+    - python3-pymysql
+
+- name: copy the uwsgi config file
+  template:
+    src: ../templates/agama.ini
+    dest: /etc/uwsgi/apps-enabled/agama.ini
+  notify: restart uwsgi
+
+- name: start uwsgi
+  service:
+    name: uwsgi
+    state: started
+    enabled: yes

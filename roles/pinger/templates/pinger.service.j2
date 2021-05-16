@@ -1,0 +1,18 @@
+[Unit]
+Description=Pinger service reporting connection latency
+After=network.target influxdb.service
+Requires=influxdb.service
+Documentation=https://github.com/romankuchin/ica0002-2020/blob/master/08-logging/lab.md
+StartLimitIntervalSec=0
+
+[Service]
+Restart=always
+RestartSec=1
+User=pinger
+ExecStart=/usr/local/bin/pinger $ARGS
+#ExecReload=/bin/kill -HUP $MAINPID
+#TimeoutStopSec=20s
+#SendSIGKILL=no
+
+[Install]
+WantedBy=multi-user.target

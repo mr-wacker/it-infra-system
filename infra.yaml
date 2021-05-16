@@ -1,0 +1,93 @@
+---
+
+- name: Collect information about all VMs
+  hosts: all
+  tasks:
+    - setup:
+
+- name: Ansible connection test
+  hosts: all
+  roles:
+    - test_connection
+
+- name: Setup
+  hosts: all
+  become: yes
+  roles:
+    - init
+
+- name: DNS
+  hosts: dns_servers
+  become: yes
+  vars_files:
+    angou.yaml
+  roles:
+    - bind
+  tags: bind
+
+- name: Configure Nginx
+  hosts: all
+  vars_files:
+    angou.yaml
+  become: yes
+  roles:
+    - nginx
+  tags: nginx
+
+- name: Configure Prometheus
+  hosts: all
+  vars_files:
+    angou.yaml
+  become: yes
+  roles:
+    - prometheus
+  tags: prometheus
+
+- name: db servers
+  hosts: db_servers
+  vars_files:
+    angou.yaml
+  become: yes
+  gather_facts: no
+  roles:
+    - mysql
+  tags: mysql
+
+- name: Internal Machine Play
+  hosts: internal_vm
+  vars_files:
+    angou.yaml
+  become: yes
+  roles:
+    - users
+    - grafana
+    - docker
+    - nginx_exporter
+    - influxdb
+    - rsyslog
+    - grafana_docker
+    - bind_exporter
+    - backup
+    - pinger
+  tags:
+    - internal
+
+- name: Application Machine Play
+  hosts: application_vms
+  vars_files:
+    angou.yaml
+  become: yes
+  roles:
+    - docker
+    - agama_docker
+    - haproxy
+    - keepalived
+    - grafana
+    - backup
+    - mysql_exporter
+    - nginx_exporter
+    - bind_exporter
+    - node_exporter
+    - rsyslog
+  tags:
+    - application

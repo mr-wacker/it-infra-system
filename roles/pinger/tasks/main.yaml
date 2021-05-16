@@ -1,0 +1,40 @@
+---
+- name: Install fping
+  apt:
+    name: fping
+    state: latest
+
+#Check if curl is installed
+- name: Install curl
+  apt:
+    name: curl
+    state: latest
+
+- name: Add the user "pinger"
+  user:
+    name: pinger
+
+- name: Create pinger configuration directory
+  file:
+    path: /etc/pinger
+    state: directory
+    mode: '0751'
+
+- name: Create pinger configuration
+  template:
+    src: pinger.conf.j2
+    dest: /etc/pinger/pinger.conf
+
+- name: Setup pinger script
+  template:
+    src: pinger.sh.j2
+    dest: /usr/local/bin/pinger
+    mode: '0777'
+
+- name: Create pinger service
+  template:
+    src: pinger.service.j2
+    dest: /etc/systemd/system/pinger.service
+  notify: 
+    - Reload systemd
+    - Restart pinger
