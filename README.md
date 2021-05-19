@@ -12,7 +12,7 @@ This is a part of building infrastructure project with all essential features.
 
 # How does this work?
 
-DNS (Domain Name Server) will control each server with specific roles.
+DNS (Domain Name Server) manage domain names for each server with specific roles.
 
 Database Service is MySQL and every 2 weeks it runs a cronjob to take incremental backup.
 
