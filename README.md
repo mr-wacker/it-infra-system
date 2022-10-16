@@ -1,6 +1,7 @@
 # What is this?
 
-This is a part of building infrastructure project with all essential features.
+This is a part of building an infrastructure system for my school's course.
+The followings are the elements of the infrastructure system.
 
 - DNS
 - Database & Backup System
