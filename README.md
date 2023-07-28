@@ -1,6 +1,6 @@
 # What is this?
 
-This is a part of building an infrastructure system for my school's course.
+This infrastructure is built for the school's coursework project. sensei is super good at this. (and thanks everyone who helped me hehe)
 The followings are the elements of the infrastructure system.
 
 - DNS
